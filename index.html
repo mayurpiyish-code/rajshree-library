@@ -194,71 +194,67 @@
   </div>
 
   <script>
-    const totalSeats = 20;
-    let bookedSeats = 0;
-    const seatsBooked = new Set();
+   libraryForm.addEventListener('submit', function(event) {
+  event.preventDefault();
 
-    // Ab form ki id 'libraryForm'
-    const libraryForm = document.getElementById('libraryForm');
-    const studentTableBody = document.getElementById('studentTableBody');
-    const seatInfo = document.getElementById('seatInfo');
+  const name = document.getElementById('studentName').value.trim();
+  const seatNumber = parseInt(document.getElementById('seatNumber').value);
+  const feesPaid = parseFloat(document.getElementById('feesPaid').value);
+  const feesDate = document.getElementById('feesDate').value;
+  const expiryDate = document.getElementById('expiryDate').value;
+  const today = new Date().toISOString().split('T')[0];
 
-    libraryForm.addEventListener('submit', function(event) {
-      event.preventDefault();
+  if (seatsBooked.has(seatNumber)) {
+    alert('This seat is already booked!');
+    return;
+  }
 
-      const name = document.getElementById('studentName').value.trim();
-      const seatNumber = parseInt(document.getElementById('seatNumber').value);
-      const feesPaid = parseFloat(document.getElementById('feesPaid').value);
-      const feesDate = document.getElementById('feesDate').value;
-      const expiryDate = document.getElementById('expiryDate').value;
-      const today = new Date().toISOString().split('T')[0];
+  seatsBooked.add(seatNumber);
+  bookedSeats++;
 
-      if (seatsBooked.has(seatNumber)) {
-        alert('This seat is already booked!');
-        return;
-      }
+  const status = expiryDate < today ? 'Expired' : 'Active';
 
-      seatsBooked.add(seatNumber);
-      bookedSeats++;
+  // Store entry in localStorage
+  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+  studentEntries.push({
+    name, seatNumber, feesPaid, feesDate, expiryDate, status
+  });
+  localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
 
-      const status = expiryDate < today ? 'Expired' : 'Active';
+  showEntries(); // Show updated entries
+  seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+  libraryForm.reset();
+});
 
-      // Add row to the table
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${name}</td>
-        <td>${seatNumber}</td>
-        <td>${feesPaid}</td>
-        <td>${feesDate}</td>
-        <td>${expiryDate}</td>
-        <td>${status}</td>
-      `;
-      studentTableBody.appendChild(tr);
+// Page load par entries show karne ka function
+function showEntries() {
+  const studentTableBody = document.getElementById('studentTableBody');
+  studentTableBody.innerHTML = "";
+  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+  studentEntries.forEach(entry => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${entry.name}</td>
+      <td>${entry.seatNumber}</td>
+      <td>${entry.feesPaid}</td>
+      <td>${entry.feesDate}</td>
+      <td>${entry.expiryDate}</td>
+      <td>${entry.status}</td>
+    `;
+    studentTableBody.appendChild(tr);
+  });
+  bookedSeats = studentEntries.length;
+  seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+}
 
-      // Update seat info
-      seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+// Add this to window.onload
+window.onload = function() {
+  document.getElementById('libraryForm').style.display = 'none';
+  document.getElementById('readonlyMsg').style.display = 'block';
+  askPassword();
+  showEntries(); // Entries always show on load
+}
 
-      // Reset form
-      libraryForm.reset();
-    });
-
-    // Password logic for libraryForm:
-    const password = "rajshree@9799";
-    function askPassword() {
-      let userPass = prompt("Entry Panel Access ke liye password daalein:");
-      if (userPass === password) {
-        document.getElementById('libraryForm').style.display = 'block';
-        document.getElementById('readonlyMsg').style.display = 'none';
-      } else {
-        document.getElementById('libraryForm').style.display = 'none';
-        document.getElementById('readonlyMsg').style.display = 'block';
-      }
-    }
-    window.onload = function() {
-      document.getElementById('libraryForm').style.display = 'none';
-      document.getElementById('readonlyMsg').style.display = 'block';
-      askPassword();
-    }
   </script>
 </body>
 </html>
