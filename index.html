@@ -171,7 +171,17 @@ tr:hover td {
   </style>
 </head>
 <body>
+<form id="studentForm">
+  <!-- Yahan pe sab fields aapki form ki -->
+</form>
+
   <h2>RAJSHREE LIBRARY PORTAL</h2>
+
+  <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
+  <span style="font-size:18px; color:#ff5252;">Read-only mode: Entry not allowed</span>
+</div>
+<!-- Table of students below this, always visible -->
+
 
   <form id="studentForm">
     <label for="studentName">Student Name:</label>
@@ -261,22 +271,24 @@ tr:hover td {
       // Reset form
       studentForm.reset();
     });
-    // Password for entry access
-  const password = "Rajshree@9799"; // Apna password daal dein
+     const password = "Rajshree@9799"; // apna password rakh lein yahan
 
-  function checkPassword() {
-    let userPass = prompt("Library Entry Panel Access ke liye password daalein:");
+  function askPassword() {
+    let userPass = prompt("Entry Panel Access ke liye password daalein:");
     if (userPass === password) {
       document.getElementById('studentForm').style.display = 'block';
+      document.getElementById('readonlyMsg').style.display = 'none';
     } else {
-      alert("Read-only mode!");
       document.getElementById('studentForm').style.display = 'none';
+      document.getElementById('readonlyMsg').style.display = 'block';
+      // Optional: error message or try again
     }
   }
 
   window.onload = function() {
-    document.getElementById('studentForm').style.display = 'none'; // Form chhupa rahe
-    checkPassword(); // Page load par password maange
+    document.getElementById('studentForm').style.display = 'none';
+    document.getElementById('readonlyMsg').style.display = 'block';
+    askPassword();
   }
   </script>
 </body>
