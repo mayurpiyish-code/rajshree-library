@@ -252,15 +252,20 @@ function showEntries() {
 }
 
 // ========== Password panel logic ==========
-const password = "rajshree@9799";
 function askPassword() {
-  let userPass = prompt("Entry Panel Access ke liye password daalein:");
-  if (userPass === password) {
-    document.getElementById('libraryForm').style.display = 'block';
-    document.getElementById('readonlyMsg').style.display = 'none';
-  } else {
-    document.getElementById('libraryForm').style.display = 'none';
-    document.getElementById('readonlyMsg').style.display = 'block';
+  let userPass = "";
+  while (userPass !== password) {
+    userPass = prompt("Entry Panel Access ke liye password daalein:");
+    if (userPass === null) break; // agar user cancel kare
+    if (userPass === password) {
+      document.getElementById('libraryForm').style.display = 'block';
+      document.getElementById('readonlyMsg').style.display = 'none';
+      return; // sahi password par exit
+    } else {
+      alert("Galat password! Read-only mode.");
+      document.getElementById('libraryForm').style.display = 'none';
+      document.getElementById('readonlyMsg').style.display = 'block';
+    }
   }
 }
 
