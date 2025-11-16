@@ -7,7 +7,7 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <style>
+ <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -166,10 +166,6 @@
       overflow-x: auto;
       white-space: nowrap;
     }
-    .expired-row {
-      outline: 2px solid red;
-      background: rgba(255, 0, 0, 0.1);
-    }
   </style>
 </head>
 <body>
@@ -249,9 +245,6 @@
           const entry = doc.data();
           const status = entry.expiryDate < today ? 'Expired' : 'Active';
           const tr = document.createElement('tr');
-          if (status === 'Expired') {
-            tr.classList.add('expired-row'); // red outline for expired entries
-          }
           tr.innerHTML = `
             <td>${entry.name}</td>
             <td>${entry.seatNumber}</td>
@@ -299,7 +292,10 @@
               libraryForm.reset();
               showEntries();
             });
-           // ---- THIS IS THE ONLY closure for submit handler ---
+        }
+      });
+    });   // ---- THIS IS THE ONLY closure for submit handler ----
+
 
     // Edit entry logic
     window.editEntry = function(docId) {
