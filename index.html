@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore-compat.js"></script>
   <title>RAJSHREE LIBRARY PORTAL</title>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -216,86 +217,104 @@
   </div>
 
   <script>
+    // ------- Your Firebase config here -------
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiNQOqGzKbOOuKojw7LxpvVg_C0R85z3M",
+      authDomain: "rajshree-library.firebaseapp.com",
+      projectId: "rajshree-library",
+      // ...rest of config
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     const totalSeats = 20;
-    let bookedSeats = 0;
-    let editIndex = null;
+    let editDocId = null;
 
     const libraryForm = document.getElementById('libraryForm');
     const studentTableBody = document.getElementById('studentTableBody');
     const seatInfo = document.getElementById('seatInfo');
     const submitButton = document.getElementById('submitButton');
 
-    // Function to show all entries from localStorage
+    // Load entries from Firestore and show in table
     function showEntries() {
       studentTableBody.innerHTML = "";
-      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
-      const today = new Date().toISOString().split('T')[0];
-      const isFormVisible = document.getElementById('libraryForm').style.display === 'block';
-      studentEntries.forEach((entry, i) => {
-        const status = entry.expiryDate < today ? 'Expired' : 'Active';
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${entry.name}</td>
-          <td>${entry.seatNumber}</td>
-          <td>${entry.feesPaid}</td>
-          <td>${entry.feesDate}</td>
-          <td>${entry.expiryDate}</td>
-          <td>${status}</td>
-          <td>
-            <button class="edit-btn" onclick="editEntry(${i})" ${!isFormVisible ? "disabled" : ""}>Change</button>
-          </td>
-        `;
-        studentTableBody.appendChild(tr);
+      db.collection("students").get().then(snapshot => {
+        let bookedSeats = 0;
+        const today = new Date().toISOString().split('T')[0];
+        snapshot.forEach(doc => {
+          bookedSeats++;
+          const entry = doc.data();
+          const status = entry.expiryDate < today ? 'Expired' : 'Active';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${entry.name}</td>
+            <td>${entry.seatNumber}</td>
+            <td>${entry.feesPaid}</td>
+            <td>${entry.feesDate}</td>
+            <td>${entry.expiryDate}</td>
+            <td>${status}</td>
+            <td>
+              <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
+            </td>
+          `;
+          studentTableBody.appendChild(tr);
+        });
+        seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
       });
-      bookedSeats = studentEntries.length;
-      seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
     }
 
-    libraryForm.addEventListener('submit', function(event) {
+    // Form submit handler (add or update entry)
+    libraryForm.addEventListener('submit', function (event) {
       event.preventDefault();
+      const entry = {
+        name: document.getElementById('studentName').value.trim(),
+        seatNumber: parseInt(document.getElementById('seatNumber').value),
+        feesPaid: parseFloat(document.getElementById('feesPaid').value),
+        feesDate: document.getElementById('feesDate').value,
+        expiryDate: document.getElementById('expiryDate').value
+      };
 
-      const name = document.getElementById('studentName').value.trim();
-      const seatNumber = parseInt(document.getElementById('seatNumber').value);
-      const feesPaid = parseFloat(document.getElementById('feesPaid').value);
-      const feesDate = document.getElementById('feesDate').value;
-      const expiryDate = document.getElementById('expiryDate').value;
-
-      let studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
-
-      if(editIndex !== null) {
-        if(studentEntries.some((entry, idx) => entry.seatNumber === seatNumber && idx !== editIndex)) {
+      // Check for double booking seat number
+      db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
+        if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
           alert('This seat is already booked!');
           return;
         }
-        studentEntries[editIndex] = { name, seatNumber, feesPaid, feesDate, expiryDate };
-        editIndex = null;
-        submitButton.textContent = "Add Student";
-      }
-      else {
-        if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
-          alert('This seat is already booked!');
-          return;
+        if (editDocId) {
+          db.collection("students").doc(editDocId).set(entry)
+            .then(() => {
+              editDocId = null;
+              submitButton.textContent = "Add Student";
+              libraryForm.reset();
+              showEntries();
+            });
+        } else {
+          db.collection("students").add(entry)
+            .then(() => {
+              libraryForm.reset();
+              showEntries();
+            });
         }
-        studentEntries.push({ name, seatNumber, feesPaid, feesDate, expiryDate });
-      }
-
-      localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
-      showEntries();
-      libraryForm.reset();
+      });
     });
 
-    window.editEntry = function(index) {
-      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
-      const entry = studentEntries[index];
-      document.getElementById('studentName').value = entry.name;
-      document.getElementById('seatNumber').value = entry.seatNumber;
-      document.getElementById('feesPaid').value = entry.feesPaid;
-      document.getElementById('feesDate').value = entry.feesDate;
-      document.getElementById('expiryDate').value = entry.expiryDate;
-      editIndex = index;
-      submitButton.textContent = "Update Entry";
-    }
+    // Edit entry
+    window.editEntry = function(docId) {
+      db.collection("students").doc(docId).get().then(doc => {
+        if (doc.exists) {
+          const entry = doc.data();
+          document.getElementById('studentName').value = entry.name;
+          document.getElementById('seatNumber').value = entry.seatNumber;
+          document.getElementById('feesPaid').value = entry.feesPaid;
+          document.getElementById('feesDate').value = entry.feesDate;
+          document.getElementById('expiryDate').value = entry.expiryDate;
+          editDocId = docId;
+          submitButton.textContent = "Update Entry";
+        }
+      });
+    };
 
+    // Password logic (same as before)
     const password = "rajshree@9799";
     function askPassword() {
       let userPass = "";
@@ -305,47 +324,23 @@
         if (userPass === password) {
           document.getElementById('libraryForm').style.display = 'block';
           document.getElementById('readonlyMsg').style.display = 'none';
-          showEntries();  // Important: Enable edit buttons
+          showEntries();
           return;
         } else {
-          alert("Galat password! Read-only mode.");
+          alert("Wrong password! Read-only mode.");
           document.getElementById('libraryForm').style.display = 'none';
           document.getElementById('readonlyMsg').style.display = 'block';
-          showEntries();  // Important: Disable edit buttons
+          showEntries();
         }
       }
     }
 
-    window.onload = function() {
+    window.onload = function () {
       document.getElementById('libraryForm').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
       askPassword();
       showEntries();
-    };
-    const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  // अन्य config params
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-db.collection("students").add({
-  name: "Student Name",
-  seatNumber: 1,
-  feesPaid: 500,
-  feesDate: "2025-11-16",
-  expiryDate: "2026-11-16"
-})
-.then(() => console.log("Data added"))
-.catch(error => console.error("Error adding data: ", error));
-db.collection("students").get().then(querySnapshot => {
-  querySnapshot.forEach(doc => {
-    console.log(doc.id, doc.data());
-  });
-});
-
+    }
   </script>
 </body>
 </html>
