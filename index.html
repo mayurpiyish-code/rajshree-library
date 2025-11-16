@@ -281,23 +281,30 @@
           alert('This seat is already booked!');
           return;
         }
-        if (editDocId) {
-          db.collection("students").doc(editDocId).set(entry)
-            .then(() => {
-              editDocId = null;
-              submitButton.textContent = "Add Student";
-              libraryForm.reset();
-              showEntries();
-            });
-        } else {
-          db.collection("students").add(entry)
-            .then(() => {
-              libraryForm.reset();
-              showEntries();
-            });
-        }
-      });
+       if (editDocId) {
+  // Update entry
+  db.collection("students").doc(editDocId).set(entry)
+    .then(() => {
+      editDocId = null;
+      submitButton.textContent = "Add Student";
+      libraryForm.reset();
+      showEntries();
     });
+} else {
+  // ADD entry
+  db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
+    if (!qs.empty) {
+      alert('This seat is already booked!');
+      return;
+    }
+    db.collection("students").add(entry)
+      .then(() => {
+        libraryForm.reset();
+        showEntries();
+      });
+  });
+}
+
 
     // Edit entry
     window.editEntry = function(docId) {
