@@ -74,6 +74,27 @@
       background: #6a11cb;
       box-shadow: 0 8px 20px rgba(106, 17, 203, 0.7);
     }
+    button.edit-btn {
+      background-color: #ffa500;
+      color: black;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      margin: 0 8px;
+      padding: 6px 16px;
+      box-shadow: none;
+      width: auto;
+      cursor: pointer;
+    }
+    button.edit-btn:disabled {
+      background: #999;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    button.edit-btn:hover:enabled {
+      background-color: #cc8400;
+      color: #fff;
+    }
     #seatInfo {
       margin-top: 25px;
       background: rgba(37, 117, 252, 0.8);
@@ -120,18 +141,6 @@
     }
     tr:hover td {
       background-color: rgba(37, 117, 252, 0.4);
-    }
-    button.edit-btn {
-      background-color: #ffa500;
-      padding: 5px 10px;
-      border-radius: 6px;
-      font-weight: 600;
-      box-shadow: none;
-      width: auto;
-      margin-top: 0;
-    }
-    button.edit-btn:hover {
-      background-color: #cc8400;
     }
     @media (max-width: 600px) {
       form, #seatInfo, #studentList {
@@ -207,7 +216,7 @@
   <script>
     const totalSeats = 20;
     let bookedSeats = 0;
-    let editIndex = null; // track ki entry edit ho rahi hai ya nahi
+    let editIndex = null;
 
     const libraryForm = document.getElementById('libraryForm');
     const studentTableBody = document.getElementById('studentTableBody');
@@ -219,6 +228,7 @@
       studentTableBody.innerHTML = "";
       const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
       const today = new Date().toISOString().split('T')[0];
+      const isFormVisible = document.getElementById('libraryForm').style.display === 'block';
       studentEntries.forEach((entry, i) => {
         const status = entry.expiryDate < today ? 'Expired' : 'Active';
         const tr = document.createElement('tr');
@@ -229,7 +239,9 @@
           <td>${entry.feesDate}</td>
           <td>${entry.expiryDate}</td>
           <td>${status}</td>
-          <td><button class="edit-btn" onclick="editEntry(${i})">Change</button></td>
+          <td>
+            <button class="edit-btn" onclick="editEntry(${i})" ${!isFormVisible ? "disabled" : ""}>Change</button>
+          </td>
         `;
         studentTableBody.appendChild(tr);
       });
@@ -237,7 +249,6 @@
       seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
     }
 
-    // On form submit: add new or update existing entry
     libraryForm.addEventListener('submit', function(event) {
       event.preventDefault();
 
@@ -249,9 +260,7 @@
 
       let studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
 
-      // For editing existing entry
       if(editIndex !== null) {
-        // Check if seat number duplicate in other entries
         if(studentEntries.some((entry, idx) => entry.seatNumber === seatNumber && idx !== editIndex)) {
           alert('This seat is already booked!');
           return;
@@ -261,7 +270,6 @@
         submitButton.textContent = "Add Student";
       }
       else {
-        // Check if seat is already booked before adding new
         if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
           alert('This seat is already booked!');
           return;
@@ -274,8 +282,7 @@
       libraryForm.reset();
     });
 
-    // Edit entry: load data into form for editing
-    function editEntry(index) {
+    window.editEntry = function(index) {
       const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
       const entry = studentEntries[index];
       document.getElementById('studentName').value = entry.name;
@@ -287,7 +294,6 @@
       submitButton.textContent = "Update Entry";
     }
 
-    // Password protection logic
     const password = "rajshree@9799";
     function askPassword() {
       let userPass = "";
@@ -297,11 +303,13 @@
         if (userPass === password) {
           document.getElementById('libraryForm').style.display = 'block';
           document.getElementById('readonlyMsg').style.display = 'none';
+          showEntries();  // Important: Enable edit buttons
           return;
         } else {
           alert("Galat password! Read-only mode.");
           document.getElementById('libraryForm').style.display = 'none';
           document.getElementById('readonlyMsg').style.display = 'block';
+          showEntries();  // Important: Disable edit buttons
         }
       }
     }
