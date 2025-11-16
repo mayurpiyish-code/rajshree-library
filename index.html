@@ -279,7 +279,7 @@
     if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
       alert('This seat is already booked!');
       return;
-    }
+    }};
     if (editDocId) {
       // UPDATE ENTRY
       db.collection("students").doc(editDocId).set(entry)
