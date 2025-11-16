@@ -170,12 +170,12 @@ tr:hover td {
 
   </style>
 </head>
-<body>
-<form id="studentForm">
-  <!-- Yahan pe sab fields aapki form ki -->
-</form>
 
   <h2>RAJSHREE LIBRARY PORTAL</h2>
+  <body>
+<form id="studentFormm">
+  <!-- Yahan pe sab fields aapki form ki -->
+</form>
 
   <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
   <span style="font-size:18px; color:#ff5252;">Read-only mode: Entry not allowed</span>
@@ -276,17 +276,17 @@ tr:hover td {
   function askPassword() {
     let userPass = prompt("Entry Panel Access ke liye password daalein:");
     if (userPass === password) {
-      document.getElementById('studentForm').style.display = 'block';
+      document.getElementById('studentFormm').style.display = 'block';
       document.getElementById('readonlyMsg').style.display = 'none';
     } else {
-      document.getElementById('studentForm').style.display = 'none';
+      document.getElementById('studentFormm').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
       // Optional: error message or try again
     }
   }
 
   window.onload = function() {
-    document.getElementById('studentForm').style.display = 'none';
+    document.getElementById('studentFormm').style.display = 'none';
     document.getElementById('readonlyMsg').style.display = 'block';
     askPassword();
   }
