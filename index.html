@@ -288,7 +288,7 @@
           submitButton.textContent = "Add Student";
           libraryForm.reset();
           showEntries();
-        });
+        }};
     } else {
       // ADD ENTRY ONLY ONCE
       db.collection("students").add(entry)
