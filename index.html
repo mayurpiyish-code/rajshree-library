@@ -191,9 +191,6 @@ tr:hover td {
 
     <button type="submit">Add Student</button>
   </form>
-<label for="passwordInput">Enter Password:</label>
-<input type="password" id="passwordInput" placeholder="Password" />
-<button onclick="checkPassword()">Submit</button>
   <div id="seatInfo">
     Total Seats: 20 | Booked Seats: 0 | Available Seats: 20
   </div>
@@ -262,17 +259,7 @@ tr:hover td {
 
       // Reset form
       studentForm.reset();
-    })
-        function checkPassword() {
-    const input = document.getElementById('passwordInput').value;
-    const correctPassword = "Rajshree@9799";
-    if(input === correctPassword) {
-      alert("Password correct! You can enter.");
-      // Yahan form ko display karwana ya aage badhana
-    } else {
-      alert("Password wrong!");
-    }
-  };
+    });
   </script>
 </body>
 </html>
