@@ -220,8 +220,8 @@
     </table>
   </div>
 
- <script>
-  // ------- Your Firebase config here -------
+<script>
+  // Firebase config (aapka original config)
   const firebaseConfig = {
     apiKey: "AIzaSyAiNQOqGzKbOOuKojw7LxpvVg_C0R85z3M",
     authDomain: "rajshree-library.firebaseapp.com",
@@ -232,13 +232,14 @@
 
   const totalSeats = 20;
   let editDocId = null;
+  let isEditAllowed = false;
 
   const libraryForm = document.getElementById('libraryForm');
   const studentTableBody = document.getElementById('studentTableBody');
   const seatInfo = document.getElementById('seatInfo');
   const submitButton = document.getElementById('submitButton');
 
-  // Function to display entries
+  // Show entries with buttons enabled/disabled based on isEditAllowed
   function showEntries() {
     studentTableBody.innerHTML = "";
     db.collection("students").orderBy("seatNumber").get().then(snapshot => {
@@ -260,8 +261,8 @@
           <td>${entry.expiryDate}</td>
           <td>${status}</td>
           <td>
-            <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
-            <button class="edit-btn" style="background:#e53935; color:white;" onclick="deleteEntry('${doc.id}')">Delete</button>
+            <button class="edit-btn" onclick="editEntry('${doc.id}')" ${!isEditAllowed ? 'disabled' : ''}>Change</button>
+            <button class="edit-btn" style="background:#e53935; color:white;" onclick="deleteEntry('${doc.id}')" ${!isEditAllowed ? 'disabled' : ''}>Delete</button>
           </td>
         `;
         studentTableBody.appendChild(tr);
@@ -270,48 +271,48 @@
     });
   }
 
-  // Submit handler for Add or Update entry (prevents double seatNumber)
+  // Submit handler
   libraryForm.addEventListener('submit', function (event) {
     event.preventDefault();
+    if (!isEditAllowed) {
+      alert("You do not have permission to add or edit entries.");
+      return;
+    }
+    const entry = {
+      name: document.getElementById('studentName').value.trim(),
+      seatNumber: parseInt(document.getElementById('seatNumber').value),
+      feesPaid: parseFloat(document.getElementById('feesPaid').value),
+      feesDate: document.getElementById('feesDate').value,
+      expiryDate: document.getElementById('expiryDate').value
+    };
 
-    db.collection("students").get().then(snapshot => {
-      if (snapshot.size >= 20 && !editDocId) {
-        alert('Maximum 20 entries allowed. No more seats available!');
+    db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
+      if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
+        alert('This seat is already booked!');
         return;
       }
-
-      const entry = {
-        name: document.getElementById('studentName').value.trim(),
-        seatNumber: parseInt(document.getElementById('seatNumber').value),
-        feesPaid: parseFloat(document.getElementById('feesPaid').value),
-        feesDate: document.getElementById('feesDate').value,
-        expiryDate: document.getElementById('expiryDate').value
-      };
-
-      db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
-        if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
-          alert('This seat is already booked!');
-          return;
-        }
-        if (editDocId) {
-          db.collection("students").doc(editDocId).set(entry).then(() => {
-            editDocId = null;
-            submitButton.textContent = "Add Student";
-            libraryForm.reset();
-            showEntries();
-          });
-        } else {
-          db.collection("students").add(entry).then(() => {
-            libraryForm.reset();
-            showEntries();
-          });
-        }
-      });
+      if (editDocId) {
+        db.collection("students").doc(editDocId).set(entry).then(() => {
+          editDocId = null;
+          submitButton.textContent = "Add Student";
+          libraryForm.reset();
+          showEntries();
+        });
+      } else {
+        db.collection("students").add(entry).then(() => {
+          libraryForm.reset();
+          showEntries();
+        });
+      }
     });
   });
 
   // Edit entry handler
   window.editEntry = function(docId) {
+    if (!isEditAllowed) {
+      alert("You do not have permission to edit entries.");
+      return;
+    }
     db.collection("students").doc(docId).get().then(doc => {
       if (doc.exists) {
         const entry = doc.data();
@@ -326,22 +327,25 @@
     });
   };
 
-  // DELETE entry handler
+  // Delete entry handler
   window.deleteEntry = function(docId) {
+    if (!isEditAllowed) {
+      alert("You do not have permission to delete entries.");
+      return;
+    }
     if (confirm('Are you sure you want to delete this entry?')) {
       db.collection("students").doc(docId).delete().then(() => {
-        showEntries();
-        // reset update state in case user was editing deleted entry
         if (editDocId === docId) {
           editDocId = null;
           submitButton.textContent = "Add Student";
           libraryForm.reset();
         }
+        showEntries();
       });
     }
   };
 
-  // Password prompt to enable form
+  // Password prompt to enable edit mode
   const password = "rajshree@9799";
   function askPassword() {
     let userPass = "";
@@ -349,12 +353,14 @@
       userPass = prompt("Entry Panel Access ke liye password daalein:");
       if (userPass === null) break;
       if (userPass === password) {
+        isEditAllowed = true;
         document.getElementById('libraryForm').style.display = 'block';
         document.getElementById('readonlyMsg').style.display = 'none';
         showEntries();
         return;
       } else {
         alert("Wrong password! Read-only mode.");
+        isEditAllowed = false;
         document.getElementById('libraryForm').style.display = 'none';
         document.getElementById('readonlyMsg').style.display = 'block';
         showEntries();
@@ -363,11 +369,13 @@
   }
 
   window.onload = function () {
+    isEditAllowed = false;
     document.getElementById('libraryForm').style.display = 'none';
     document.getElementById('readonlyMsg').style.display = 'block';
     askPassword();
     showEntries();
   }
 </script>
+
 </body>
 </html>
