@@ -8,7 +8,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <style>
-    /* --- CSS SAME AS before, paste here --- */
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -26,7 +25,6 @@
       margin-bottom: 25px;
       text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
-    /* ...baaki CSS... */
     form {
       background: rgba(255, 255, 255, 0.12);
       padding: 25px 30px;
@@ -36,7 +34,138 @@
       box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
       backdrop-filter: blur(10px);
     }
-    /* ...table CSS, buttons etc (same as yours)... */
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: #e0e0ff;
+    }
+    input[type="text"], 
+    input[type="number"], 
+    input[type="date"] {
+      width: 100%;
+      padding: 12px 15px;
+      margin-top: 8px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      background-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+      transition: background-color 0.3s ease;
+    }
+    input[type="text"]:focus, 
+    input[type="number"]:focus, 
+    input[type="date"]:focus {
+      background-color: rgba(255, 255, 255, 0.55);
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 0;
+      width: 100%;
+      background: #2575fc;
+      border: none;
+      border-radius: 25px;
+      color: #fff;
+      font-size: 18px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(37, 117, 252, 0.6);
+      transition: background 0.4s ease;
+    }
+    button:hover {
+      background: #6a11cb;
+      box-shadow: 0 8px 20px rgba(106, 17, 203, 0.7);
+    }
+    button.edit-btn {
+      background-color: #ffa500;
+      color: black;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      margin: 0 8px;
+      padding: 6px 16px;
+      box-shadow: none;
+      width: auto;
+      cursor: pointer;
+    }
+    button.edit-btn:disabled {
+      background: #999;
+      color: #eee;
+      cursor: not-allowed;
+    }
+    button.edit-btn:hover:enabled {
+      background-color: #cc8400;
+      color: #fff;
+    }
+    #seatInfo {
+      margin-top: 25px;
+      background: rgba(37, 117, 252, 0.8);
+      padding: 15px 25px;
+      border-radius: 30px;
+      font-size: 20px;
+      font-weight: 700;
+      text-align: center;
+      width: 100%;
+      max-width: 500px;
+      box-shadow: 0 8px 18px rgba(37, 117, 252, 0.6);
+      color: #f0f0f0;
+    }
+    #studentList {
+      margin-top: 35px;
+      width: 100%;
+      max-width: 900px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 25px 30px;
+      border-radius: 15px;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+      color: #f0f0f0;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      font-size: 16px;
+    }
+    th, td {
+      padding: 12px 18px;
+      background: rgba(0, 0, 0, 0.2);
+      color: #e0e0ff;
+      text-align: left;
+      border-radius: 10px;
+    }
+    th {
+      background-color: rgba(0, 0, 0, 0.6);
+      font-weight: 700;
+    }
+    td {
+      transition: background-color 0.3s ease;
+    }
+    tr:hover td {
+      background-color: rgba(37, 117, 252, 0.4);
+    }
+    @media (max-width: 600px) {
+      form, #seatInfo, #studentList {
+        width: 95% !important;
+        padding: 20px 15px !important;
+      }
+      table, th, td {
+        font-size: 14px !important;
+      }
+      button {
+        font-size: 16px !important;
+        padding: 10px 0 !important;
+      }
+      label {
+        font-size: 14px !important;
+      }
+    }
+    #studentList table {
+      display: block;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
   </style>
 </head>
 <body>
@@ -93,6 +222,7 @@
       apiKey: "AIzaSyAiNQOqGzKbOOuKojw7LxpvVg_C0R85z3M",
       authDomain: "rajshree-library.firebaseapp.com",
       projectId: "rajshree-library",
+      // ...rest of config
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -134,10 +264,14 @@
     }
 
     // Form submit handler (add or update entry)
-   libraryForm.addEventListener('submit', function (event) {
+    libraryForm.addEventListener('submit', function (event) {
   event.preventDefault();
-  const entry = {
-    // ...sara input...
+ const entry = {
+    name: document.getElementById('studentName').value.trim(),
+    seatNumber: parseInt(document.getElementById('seatNumber').value),
+    feesPaid: parseFloat(document.getElementById('feesPaid').value),
+    feesDate: document.getElementById('feesDate').value,
+    expiryDate: document.getElementById('expiryDate').value
   };
 
   db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
@@ -153,6 +287,7 @@
           libraryForm.reset();
           showEntries();
         });
+    });
     } else {
       db.collection("students").add(entry)
         .then(() => {
@@ -161,7 +296,6 @@
         });
     }
   });
-}); // <-- Yahi sahi closing hai, iske baad kuch extra bracket, parenthesis, ya semicolon nahi hona chahiye!s
 
     // Edit entry logic
     window.editEntry = function(docId) {
