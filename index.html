@@ -219,145 +219,128 @@
 
   <script>
     // ------- Your Firebase config here -------
-   // ------- Your Firebase config here -------
-const firebaseConfig = {
-  apiKey: "AIzaSyAiNQOqGzKbOOuKojw7LxpvVg_C0R85z3M",
-  authDomain: "rajshree-library.firebaseapp.com",
-  projectId: "rajshree-library",
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+    const firebaseConfig = {
+      apiKey: "AIzaSyAiNQOqGzKbOOuKojw7LxpvVg_C0R85z3M",
+      authDomain: "rajshree-library.firebaseapp.com",
+      projectId: "rajshree-library",
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-const totalSeats = 20;
-let editDocId = null;
+    const totalSeats = 20;
+    let editDocId = null;
 
-const libraryForm = document.getElementById('libraryForm');
-const studentTableBody = document.getElementById('studentTableBody');
-const seatInfo = document.getElementById('seatInfo');
-const submitButton = document.getElementById('submitButton');
+    const libraryForm = document.getElementById('libraryForm');
+    const studentTableBody = document.getElementById('studentTableBody');
+    const seatInfo = document.getElementById('seatInfo');
+    const submitButton = document.getElementById('submitButton');
 
-// Load entries from Firestore and show in table
-function showEntries() {
-  studentTableBody.innerHTML = "";
-  db.collection("students").orderBy("seatNumber").get().then(snapshot => {
-    let bookedSeats = 0;
-    const today = new Date().toISOString().split('T')[0];
-    snapshot.forEach(doc => {
-      bookedSeats++;
-      const entry = doc.data();
-      const status = entry.expiryDate < today ? 'Expired' : 'Active';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${entry.name}</td>
-        <td>${entry.seatNumber}</td>
-        <td>${entry.feesPaid}</td>
-        <td>${entry.feesDate}</td>
-        <td>${entry.expiryDate}</td>
-        <td>${status}</td>
-        <td>
-          <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
-        </td>
-      `;
-      studentTableBody.appendChild(tr);
-    });
-    seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
-  });
-}
-
-// Form submit handler (add or update entry)
-libraryForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  
-  // Disable button and show loading
-  submitButton.disabled = true;
-  submitButton.textContent = "Processing...";
-  
-  const entry = {
-    name: document.getElementById('studentName').value.trim(),
-    seatNumber: parseInt(document.getElementById('seatNumber').value),
-    feesPaid: parseFloat(document.getElementById('feesPaid').value),
-    feesDate: document.getElementById('feesDate').value,
-    expiryDate: document.getElementById('expiryDate').value
-  };
-
-  db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
-    if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
-      alert('This seat is already booked!');
-      // Re-enable button on failure
-      submitButton.disabled = false;
-      submitButton.textContent = editDocId ? "Update Entry" : "Add Student";
-      return;
+    // Load entries from Firestore and show in table
+    function showEntries() {
+      studentTableBody.innerHTML = "";
+      db.collection("students").orderBy("seatNumber").get().then(snapshot => {
+        let bookedSeats = 0;
+        const today = new Date().toISOString().split('T')[0];
+        snapshot.forEach(doc => {
+          bookedSeats++;
+          const entry = doc.data();
+          const status = entry.expiryDate < today ? 'Expired' : 'Active';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${entry.name}</td>
+            <td>${entry.seatNumber}</td>
+            <td>${entry.feesPaid}</td>
+            <td>${entry.feesDate}</td>
+            <td>${entry.expiryDate}</td>
+            <td>${status}</td>
+            <td>
+              <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
+            </td>
+          `;
+          studentTableBody.appendChild(tr);
+        });
+        seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+      });
     }
-    
-    const promise = editDocId 
-      ? db.collection("students").doc(editDocId).set(entry)
-      : db.collection("students").add(entry);
-    
-    promise.then(() => {
-      editDocId = null;
-      submitButton.textContent = "Add Student";
-      libraryForm.reset();
-      showEntries();
-    }).catch(error => {
-      console.error("Error adding/updating document: ", error);
-      alert("An error occurred. Please try again.");
-    }).finally(() => {
-      // Always re-enable button
-      submitButton.disabled = false;
-      submitButton.textContent = editDocId ? "Update Entry" : "Add Student";
-    });
-  }).catch(error => {
-    console.error("Error checking seat: ", error);
-    alert("An error occurred while checking the seat. Please try again.");
-    submitButton.disabled = false;
-    submitButton.textContent = editDocId ? "Update Entry" : "Add Student";
-  });
-});
 
-// Edit entry logic
-window.editEntry = function(docId) {
-  db.collection("students").doc(docId).get().then(doc => {
-    if (doc.exists) {
-      const entry = doc.data();
-      document.getElementById('studentName').value = entry.name;
-      document.getElementById('seatNumber').value = entry.seatNumber;
-      document.getElementById('feesPaid').value = entry.feesPaid;
-      document.getElementById('feesDate').value = entry.feesDate;
-      document.getElementById('expiryDate').value = entry.expiryDate;
-      editDocId = docId;
-      submitButton.textContent = "Update Entry";
+    // Form submit handler (add or update entry)
+    libraryForm.addEventListener('submit', function (event) {
+      event.preventDefault();
+      const entry = {
+        name: document.getElementById('studentName').value.trim(),
+        seatNumber: parseInt(document.getElementById('seatNumber').value),
+        feesPaid: parseFloat(document.getElementById('feesPaid').value),
+        feesDate: document.getElementById('feesDate').value,
+        expiryDate: document.getElementById('expiryDate').value
+      };
+
+      db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
+        if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
+          alert('This seat is already booked!');
+          return;
+        }
+        if (editDocId) {
+          db.collection("students").doc(editDocId).set(entry)
+            .then(() => {
+              editDocId = null;
+              submitButton.textContent = "Add Student";
+              libraryForm.reset();
+              showEntries();
+            });
+        } else {
+          db.collection("students").add(entry)
+            .then(() => {
+              libraryForm.reset();
+              showEntries();
+            });
+        }
+      });
+    });   // ---- THIS IS THE ONLY closure for submit handler ----
+
+
+    // Edit entry logic
+    window.editEntry = function(docId) {
+      db.collection("students").doc(docId).get().then(doc => {
+        if (doc.exists) {
+          const entry = doc.data();
+          document.getElementById('studentName').value = entry.name;
+          document.getElementById('seatNumber').value = entry.seatNumber;
+          document.getElementById('feesPaid').value = entry.feesPaid;
+          document.getElementById('feesDate').value = entry.feesDate;
+          document.getElementById('expiryDate').value = entry.expiryDate;
+          editDocId = docId;
+          submitButton.textContent = "Update Entry";
+        }
+      });
+    };
+
+    // Password logic
+    const password = "rajshree@9799";
+    function askPassword() {
+      let userPass = "";
+      while (userPass !== password) {
+        userPass = prompt("Entry Panel Access ke liye password daalein:");
+        if (userPass === null) break;
+        if (userPass === password) {
+          document.getElementById('libraryForm').style.display = 'block';
+          document.getElementById('readonlyMsg').style.display = 'none';
+          showEntries();
+          return;
+        } else {
+          alert("Wrong password! Read-only mode.");
+          document.getElementById('libraryForm').style.display = 'none';
+          document.getElementById('readonlyMsg').style.display = 'block';
+          showEntries();
+        }
+      }
     }
-  });
-};
 
-// Password logic
-const password = "rajshree@9799";
-function askPassword() {
-  let userPass = "";
-  while (userPass !== password) {
-    userPass = prompt("Entry Panel Access ke liye password daalein:");
-    if (userPass === null) break;
-    if (userPass === password) {
-      document.getElementById('libraryForm').style.display = 'block';
-      document.getElementById('readonlyMsg').style.display = 'none';
-      showEntries();
-      return;
-    } else {
-      alert("Wrong password! Read-only mode.");
+    window.onload = function () {
       document.getElementById('libraryForm').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
+      askPassword();
       showEntries();
     }
-  }
-}
-
-window.onload = function () {
-  document.getElementById('libraryForm').style.display = 'none';
-  document.getElementById('readonlyMsg').style.display = 'block';
-  askPassword();
-  showEntries();
-}
-
   </script>
 </body>
 </html>
