@@ -237,101 +237,69 @@
 
     // Load entries from Firestore and show in table
     function showEntries() {
-  studentTableBody.innerHTML = "";
-  // ---- CHANGE: .get() से पहले .orderBy("seatNumber") लगा दिया----
-  db.collection("students").orderBy("seatNumber").get().then(snapshot => {
-    let bookedSeats = 0;
-    const today = new Date().toISOString().split('T')[0];
-    snapshot.forEach(doc => {
-      bookedSeats++;
-      const entry = doc.data();
-      const status = entry.expiryDate < today ? 'Expired' : 'Active';
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${entry.name}</td>
-        <td>${entry.seatNumber}</td>
-        <td>${entry.feesPaid}</td>
-        <td>${entry.feesDate}</td>
-        <td>${entry.expiryDate}</td>
-        <td>${status}</td>
-        <td>
-          <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
-        </td>
-      `;
-      studentTableBody.appendChild(tr);
-    });
-    seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
-  });
-}
+      studentTableBody.innerHTML = "";
+      db.collection("students").orderBy("seatNumber").get().then(snapshot => {
+        let bookedSeats = 0;
+        const today = new Date().toISOString().split('T')[0];
+        snapshot.forEach(doc => {
+          bookedSeats++;
+          const entry = doc.data();
+          const status = entry.expiryDate < today ? 'Expired' : 'Active';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${entry.name}</td>
+            <td>${entry.seatNumber}</td>
+            <td>${entry.feesPaid}</td>
+            <td>${entry.feesDate}</td>
+            <td>${entry.expiryDate}</td>
+            <td>${status}</td>
+            <td>
+              <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
+            </td>
+          `;
+          studentTableBody.appendChild(tr);
+        });
+        seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+      });
+    }
 
     // Form submit handler (add or update entry)
     libraryForm.addEventListener('submit', function (event) {
-  event.preventDefault();
-  const entry = {
-    name: document.getElementById('studentName').value.trim(),
-    seatNumber: parseInt(document.getElementById('seatNumber').value),
-    feesPaid: parseFloat(document.getElementById('feesPaid').value),
-    feesDate: document.getElementById('feesDate').value,
-    expiryDate: document.getElementById('expiryDate').value
-  };
+      event.preventDefault();
+      const entry = {
+        name: document.getElementById('studentName').value.trim(),
+        seatNumber: parseInt(document.getElementById('seatNumber').value),
+        feesPaid: parseFloat(document.getElementById('feesPaid').value),
+        feesDate: document.getElementById('feesDate').value,
+        expiryDate: document.getElementById('expiryDate').value
+      };
 
-  db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
-    if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
-      alert('This seat is already booked!');
-      return;
-    }};
-    if (editDocId) {
-      // UPDATE ENTRY
-      db.collection("students").doc(editDocId).set(entry)
-        .then(() => {
-          editDocId = null;
-          submitButton.textContent = "Add Student";
-          libraryForm.reset();
-          showEntries();
-        }};
-    } else {
-      // ADD ENTRY ONLY ONCE
-      db.collection("students").add(entry)
-        .then(() => {
-          libraryForm.reset();
-          showEntries();
-        });
-    }
-  });
-});
-
-      // Check for double booking seat number
       db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
         if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
           alert('This seat is already booked!');
           return;
         }
-       if (editDocId) {
-  // Update entry
-  db.collection("students").doc(editDocId).set(entry)
-    .then(() => {
-      editDocId = null;
-      submitButton.textContent = "Add Student";
-      libraryForm.reset();
-      showEntries();
-    });
-} else {
-  // ADD entry
-  db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
-    if (!qs.empty) {
-      alert('This seat is already booked!');
-      return;
-    }
-    db.collection("students").add(entry)
-      .then(() => {
-        libraryForm.reset();
-        showEntries();
+        if (editDocId) {
+          // UPDATE ENTRY
+          db.collection("students").doc(editDocId).set(entry)
+            .then(() => {
+              editDocId = null;
+              submitButton.textContent = "Add Student";
+              libraryForm.reset();
+              showEntries();
+            });
+        } else {
+          // ADD ENTRY ONLY ONCE
+          db.collection("students").add(entry)
+            .then(() => {
+              libraryForm.reset();
+              showEntries();
+            });
+        }
       });
-  });
-}
+    });
 
-
-    // Edit entry
+    // Edit entry logic
     window.editEntry = function(docId) {
       db.collection("students").doc(docId).get().then(doc => {
         if (doc.exists) {
@@ -347,7 +315,7 @@
       });
     };
 
-    // Password logic (same as before)
+    // Password logic
     const password = "rajshree@9799";
     function askPassword() {
       let userPass = "";
