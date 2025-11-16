@@ -214,7 +214,6 @@
   </div>
 
   <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbz4XTyqgaKVAuMQ61tx_suOanOS355Ymauutmngi-E6J9rbuU3mWtIJ3vJs7LYYSvAF0g/exec";
     const totalSeats = 20;
     let bookedSeats = 0;
     let editIndex = null;
@@ -224,21 +223,13 @@
     const seatInfo = document.getElementById('seatInfo');
     const submitButton = document.getElementById('submitButton');
 
-    // Load sheet data from Google Sheets
-    function loadSheetData() {
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          populateTable(data);
-        })
-        .catch(error => console.error("Error fetching data:", error));
-    }
-
-    // Populate table rows from sheet data
-    function populateTable(data) {
+    // Function to show all entries from localStorage
+    function showEntries() {
       studentTableBody.innerHTML = "";
+      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
       const today = new Date().toISOString().split('T')[0];
-      data.forEach((entry, i) => {
+      const isFormVisible = document.getElementById('libraryForm').style.display === 'block';
+      studentEntries.forEach((entry, i) => {
         const status = entry.expiryDate < today ? 'Expired' : 'Active';
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -249,64 +240,59 @@
           <td>${entry.expiryDate}</td>
           <td>${status}</td>
           <td>
-            <button class="edit-btn" onclick="editEntry(${i})">Change</button>
+            <button class="edit-btn" onclick="editEntry(${i})" ${!isFormVisible ? "disabled" : ""}>Change</button>
           </td>
         `;
         studentTableBody.appendChild(tr);
       });
-      bookedSeats = data.length;
+      bookedSeats = studentEntries.length;
       seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
     }
 
-    // Add or update entry in Google Sheets
-    function addOrUpdateEntry(entry) {
-      fetch(apiUrl, {
-        method: "POST",
-        body: JSON.stringify(entry),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      })
-        .then(response => response.text())
-        .then(data => {
-          console.log("Server response:", data);
-          loadSheetData();
-        })
-        .catch(error => console.error("Error adding data:", error));
-    }
-
-    libraryForm.addEventListener("submit", (event) => {
+    libraryForm.addEventListener('submit', function(event) {
       event.preventDefault();
 
-      const entry = {
-        name: document.getElementById("studentName").value.trim(),
-        seatNumber: parseInt(document.getElementById("seatNumber").value),
-        feesPaid: parseFloat(document.getElementById("feesPaid").value),
-        feesDate: document.getElementById("feesDate").value,
-        expiryDate: document.getElementById("expiryDate").value,
-        status: "Active"
-      };
+      const name = document.getElementById('studentName').value.trim();
+      const seatNumber = parseInt(document.getElementById('seatNumber').value);
+      const feesPaid = parseFloat(document.getElementById('feesPaid').value);
+      const feesDate = document.getElementById('feesDate').value;
+      const expiryDate = document.getElementById('expiryDate').value;
 
-      addOrUpdateEntry(entry);
+      let studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+
+      if(editIndex !== null) {
+        if(studentEntries.some((entry, idx) => entry.seatNumber === seatNumber && idx !== editIndex)) {
+          alert('This seat is already booked!');
+          return;
+        }
+        studentEntries[editIndex] = { name, seatNumber, feesPaid, feesDate, expiryDate };
+        editIndex = null;
+        submitButton.textContent = "Add Student";
+      }
+      else {
+        if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
+          alert('This seat is already booked!');
+          return;
+        }
+        studentEntries.push({ name, seatNumber, feesPaid, feesDate, expiryDate });
+      }
+
+      localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
+      showEntries();
       libraryForm.reset();
     });
 
     window.editEntry = function(index) {
-      fetch(apiUrl)
-        .then(response => response.json())
-        .then(data => {
-          if (data[index]) {
-            const entry = data[index];
-            document.getElementById('studentName').value = entry.name;
-            document.getElementById('seatNumber').value = entry.seatNumber;
-            document.getElementById('feesPaid').value = entry.feesPaid;
-            document.getElementById('feesDate').value = entry.feesDate;
-            document.getElementById('expiryDate').value = entry.expiryDate;
-            editIndex = index;
-            submitButton.textContent = "Update Entry";
-          }
-        });
-    };
+      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+      const entry = studentEntries[index];
+      document.getElementById('studentName').value = entry.name;
+      document.getElementById('seatNumber').value = entry.seatNumber;
+      document.getElementById('feesPaid').value = entry.feesPaid;
+      document.getElementById('feesDate').value = entry.feesDate;
+      document.getElementById('expiryDate').value = entry.expiryDate;
+      editIndex = index;
+      submitButton.textContent = "Update Entry";
+    }
 
     const password = "rajshree@9799";
     function askPassword() {
@@ -317,13 +303,13 @@
         if (userPass === password) {
           document.getElementById('libraryForm').style.display = 'block';
           document.getElementById('readonlyMsg').style.display = 'none';
-          loadSheetData();
+          showEntries();  // Important: Enable edit buttons
           return;
         } else {
-          alert("Wrong password! Read-only mode.");
+          alert("Galat password! Read-only mode.");
           document.getElementById('libraryForm').style.display = 'none';
           document.getElementById('readonlyMsg').style.display = 'block';
-          loadSheetData();
+          showEntries();  // Important: Disable edit buttons
         }
       }
     }
@@ -332,9 +318,8 @@
       document.getElementById('libraryForm').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
       askPassword();
-      loadSheetData();
+      showEntries();
     };
   </script>
 </body>
 </html>
-
