@@ -194,7 +194,16 @@
   </div>
 
   <script>
-   libraryForm.addEventListener('submit', function(event) {
+ const totalSeats = 20;
+let bookedSeats = 0;
+const seatsBooked = new Set();
+
+const libraryForm = document.getElementById('libraryForm');
+const studentTableBody = document.getElementById('studentTableBody');
+const seatInfo = document.getElementById('seatInfo');
+
+// ========== Save entry in localStorage on submit ==========
+libraryForm.addEventListener('submit', function(event) {
   event.preventDefault();
 
   const name = document.getElementById('studentName').value.trim();
@@ -202,36 +211,31 @@
   const feesPaid = parseFloat(document.getElementById('feesPaid').value);
   const feesDate = document.getElementById('feesDate').value;
   const expiryDate = document.getElementById('expiryDate').value;
-  const today = new Date().toISOString().split('T')[0];
 
-  if (seatsBooked.has(seatNumber)) {
+  // Double booking check
+  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+  if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
     alert('This seat is already booked!');
     return;
   }
 
-  seatsBooked.add(seatNumber);
-  bookedSeats++;
-
-  const status = expiryDate < today ? 'Expired' : 'Active';
-
-  // Store entry in localStorage
-  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+  // Save to localStorage
   studentEntries.push({
-    name, seatNumber, feesPaid, feesDate, expiryDate, status
+    name, seatNumber, feesPaid, feesDate, expiryDate
   });
   localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
-
-  showEntries(); // Show updated entries
-  seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+  showEntries();
   libraryForm.reset();
 });
 
-// Page load par entries show karne ka function
+// ========== Show entries function (localStorage se) ==========
 function showEntries() {
-  const studentTableBody = document.getElementById('studentTableBody');
   studentTableBody.innerHTML = "";
   const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+  // Status update and table rows
+  const today = new Date().toISOString().split('T')[0];
   studentEntries.forEach(entry => {
+    const status = entry.expiryDate < today ? 'Expired' : 'Active';
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td>${entry.name}</td>
@@ -239,7 +243,7 @@ function showEntries() {
       <td>${entry.feesPaid}</td>
       <td>${entry.feesDate}</td>
       <td>${entry.expiryDate}</td>
-      <td>${entry.status}</td>
+      <td>${status}</td>
     `;
     studentTableBody.appendChild(tr);
   });
@@ -247,14 +251,26 @@ function showEntries() {
   seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
 }
 
-// Add this to window.onload
+// ========== Password panel logic ==========
+const password = "rajshree@9799";
+function askPassword() {
+  let userPass = prompt("Entry Panel Access ke liye password daalein:");
+  if (userPass === password) {
+    document.getElementById('libraryForm').style.display = 'block';
+    document.getElementById('readonlyMsg').style.display = 'none';
+  } else {
+    document.getElementById('libraryForm').style.display = 'none';
+    document.getElementById('readonlyMsg').style.display = 'block';
+  }
+}
+
+// ========== On page load ==========
 window.onload = function() {
   document.getElementById('libraryForm').style.display = 'none';
   document.getElementById('readonlyMsg').style.display = 'block';
   askPassword();
-  showEntries(); // Entries always show on load
-}
-
+  showEntries();
+};
   </script>
 </body>
 </html>
