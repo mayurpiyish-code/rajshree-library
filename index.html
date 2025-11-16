@@ -194,7 +194,7 @@ tr:hover td {
   <div id="seatInfo">
     Total Seats: 20 | Booked Seats: 0 | Available Seats: 20
   </div>
-  <form id="Password" style="display:none;">
+  <form id="entry" style="display:none;">
   <!-- form fields yahan... (as already in your code) -->
 </form>
   <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
@@ -273,10 +273,10 @@ tr:hover td {
   function askPassword() {
     let userPass = prompt("Entry Panel Access ke liye password daalein:");
     if (userPass === password) {
-      document.getElementById('Password').style.display = 'block';
+      document.getElementById('entry').style.display = 'block';
       document.getElementById('readonlyMsg').style.display = 'none';
     } else {
-      document.getElementById('Password').style.display = 'none';
+      document.getElementById('entry').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
       // Optional: error message or try again
     }
