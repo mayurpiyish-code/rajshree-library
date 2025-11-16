@@ -191,7 +191,9 @@ tr:hover td {
 
     <button type="submit">Add Student</button>
   </form>
-
+<label for="passwordInput">Enter Password:</label>
+<input type="password" id="passwordInput" placeholder="Password" />
+<button onclick="checkPassword()">Submit</button>
   <div id="seatInfo">
     Total Seats: 20 | Booked Seats: 0 | Available Seats: 20
   </div>
@@ -215,7 +217,7 @@ tr:hover td {
   </div>
 
   <script>
-    const totalSeats = 100;
+    const totalSeats = 20;
     let bookedSeats = 0;
     const seatsBooked = new Set();
 
@@ -260,24 +262,17 @@ tr:hover td {
 
       // Reset form
       studentForm.reset();
-    });
-    // Password for entry access
-  const password = "rajshree123"; // Apna password daal dein
-
-  function checkPassword() {
-    let userPass = prompt("Library Entry Panel Access ke liye password daalein:");
-    if (userPass === password) {
-      document.getElementById('studentForm').style.display = 'block';
+    })
+        function checkPassword() {
+    const input = document.getElementById('passwordInput').value;
+    const correctPassword = "Rajshree@9799";
+    if(input === correctPassword) {
+      alert("Password correct! You can enter.");
+      // Yahan form ko display karwana ya aage badhana
     } else {
-      alert("Read-only mode!");
-      document.getElementById('studentForm').style.display = 'none';
+      alert("Password wrong!");
     }
-  }
-
-  window.onload = function() {
-    document.getElementById('studentForm').style.display = 'none'; // Form chhupa rahe
-    checkPassword(); // Page load par password maange
-  }
+  };
   </script>
 </body>
 </html>
