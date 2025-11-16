@@ -237,31 +237,32 @@
 
     // Load entries from Firestore and show in table
     function showEntries() {
-      studentTableBody.innerHTML = "";
-      db.collection("students").get().then(snapshot => {
-        let bookedSeats = 0;
-        const today = new Date().toISOString().split('T')[0];
-        snapshot.forEach(doc => {
-          bookedSeats++;
-          const entry = doc.data();
-          const status = entry.expiryDate < today ? 'Expired' : 'Active';
-          const tr = document.createElement('tr');
-          tr.innerHTML = `
-            <td>${entry.name}</td>
-            <td>${entry.seatNumber}</td>
-            <td>${entry.feesPaid}</td>
-            <td>${entry.feesDate}</td>
-            <td>${entry.expiryDate}</td>
-            <td>${status}</td>
-            <td>
-              <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
-            </td>
-          `;
-          studentTableBody.appendChild(tr);
-        });
-        seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
-      });
-    }
+  studentTableBody.innerHTML = "";
+  // ---- CHANGE: .get() से पहले .orderBy("seatNumber") लगा दिया----
+  db.collection("students").orderBy("seatNumber").get().then(snapshot => {
+    let bookedSeats = 0;
+    const today = new Date().toISOString().split('T')[0];
+    snapshot.forEach(doc => {
+      bookedSeats++;
+      const entry = doc.data();
+      const status = entry.expiryDate < today ? 'Expired' : 'Active';
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${entry.name}</td>
+        <td>${entry.seatNumber}</td>
+        <td>${entry.feesPaid}</td>
+        <td>${entry.feesDate}</td>
+        <td>${entry.expiryDate}</td>
+        <td>${status}</td>
+        <td>
+          <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
+        </td>
+      `;
+      studentTableBody.appendChild(tr);
+    });
+    seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+  });
+}
 
     // Form submit handler (add or update entry)
     libraryForm.addEventListener('submit', function (event) {
