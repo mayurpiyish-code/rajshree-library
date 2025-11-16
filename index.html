@@ -5,105 +5,113 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RAJSHREE LIBRARY PORTAL</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0;
-      background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
-      color: #f0f0f0;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 30px 15px;
+    /* --- (same CSS as before, for brevity, skip here) --- */
+    /* You may use previously copy-pasted CSS */
+  </style>
+</head>
+<body>
+  <h2>RAJSHREE LIBRARY PORTAL</h2>
+  <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
+    <span style="font-size:18px; color:#ff5252;">Read-only mode: Entry not allowed</span>
+  </div>
+  <form id="studentForm" style="display:none;">
+    <label for="studentName">Student Name:</label>
+    <input type="text" id="studentName" required />
+    <label for="seatNumber">Seat Number:</label>
+    <input type="number" id="seatNumber" required min="1" />
+    <label for="feesPaid">Fees Paid:</label>
+    <input type="number" id="feesPaid" required min="0" />
+    <label for="feesDate">Fees Date:</label>
+    <input type="date" id="feesDate" required />
+    <label for="expiryDate">Expiry Date:</label>
+    <input type="date" id="expiryDate" required />
+    <button type="submit">Add Student</button>
+  </form>
+  <div id="seatInfo">Total Seats: 20 | Booked Seats: 0 | Available Seats: 20</div>
+  <div id="studentList">
+    <h3>Booked Seats & Students</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Seat Number</th>
+          <th>Fees Paid</th>
+          <th>Fees Date</th>
+          <th>Expiry Date</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="studentTableBody"></tbody>
+    </table>
+  </div>
+  <script>
+    const totalSeats = 20;
+    let bookedSeats = 0;
+    const seatsBooked = new Set();
+
+    const studentForm = document.getElementById('studentForm');
+    const studentTableBody = document.getElementById('studentTableBody');
+    const seatInfo = document.getElementById('seatInfo');
+
+    if(studentForm) {
+      studentForm.addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const name = document.getElementById('studentName').value.trim();
+        const seatNumber = parseInt(document.getElementById('seatNumber').value);
+        const feesPaid = parseFloat(document.getElementById('feesPaid').value);
+        const feesDate = document.getElementById('feesDate').value;
+        const expiryDate = document.getElementById('expiryDate').value;
+        const today = new Date().toISOString().split('T')[0];
+
+        if (seatsBooked.has(seatNumber)) {
+          alert('This seat is already booked!');
+          return;
+        }
+
+        seatsBooked.add(seatNumber);
+        bookedSeats++;
+
+        const status = expiryDate < today ? 'Expired' : 'Active';
+
+        // Add row to the table
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${name}</td>
+          <td>${seatNumber}</td>
+          <td>${feesPaid}</td>
+          <td>${feesDate}</td>
+          <td>${expiryDate}</td>
+          <td>${status}</td>
+        `;
+        studentTableBody.appendChild(tr);
+
+        // Update seat info
+        seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+
+        // Reset form
+        studentForm.reset();
+      });
     }
-    h2 {
-      font-weight: 1000;
-      text-align: center;
-      margin-bottom: 25px;
-      text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+
+    // Password logic for entry panel
+    const password = "Rajshree@9799";
+    function askPassword() {
+      let userPass = prompt("Entry Panel Access ke liye password daalein:");
+      if (userPass === password) {
+        document.getElementById('studentForm').style.display = 'block';
+        document.getElementById('readonlyMsg').style.display = 'none';
+      } else {
+        document.getElementById('studentForm').style.display = 'none';
+        document.getElementById('readonlyMsg').style.display = 'block';
+      }
     }
-    form {
-      background: rgba(255, 255, 255, 0.12);
-      padding: 25px 30px;
-      border-radius: 15px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(10px);
+
+    window.onload = function() {
+      document.getElementById('studentForm').style.display = 'none';
+      document.getElementById('readonlyMsg').style.display = 'block';
+      askPassword();
     }
-    label {
-      display: block;
-      margin-top: 15px;
-      font-weight: 600;
-      color: #e0e0ff;
-    }
-    input[type="text"], 
-    input[type="number"], 
-    input[type="date"] {
-      width: 100%;
-      padding: 12px 15px;
-      margin-top: 8px;
-      border-radius: 8px;
-      border: none;
-      outline: none;
-      font-size: 16px;
-      background-color: rgba(255, 255, 255, 0.3);
-      color: #fff;
-      transition: background-color 0.3s ease;
-    }
-    input[type="text"]:focus, 
-    input[type="number"]:focus, 
-    input[type="date"]:focus {
-      background-color: rgba(255, 255, 255, 0.55);
-    }
-    button {
-      margin-top: 20px;
-      padding: 12px 0;
-      width: 100%;
-      background: #2575fc;
-      border: none;
-      border-radius: 25px;
-      color: #fff;
-      font-size: 18px;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 6px 15px rgba(37, 117, 252, 0.6);
-      transition: background 0.4s ease;
-    }
-    button:hover {
-      background: #6a11cb;
-      box-shadow: 0 8px 20px rgba(106, 17, 203, 0.7);
-    }
-    #seatInfo {
-      margin-top: 25px;
-      background: rgba(37, 117, 252, 0.8);
-      padding: 15px 25px;
-      border-radius: 30px;
-      font-size: 20px;
-      font-weight: 700;
-      text-align: center;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 8px 18px rgba(37, 117, 252, 0.6);
-      color: #f0f0f0;
-    }
-    #studentList {
-      margin-top: 35px;
-      width: 100%;
-      max-width: 900px;
-      background: rgba(255, 255, 255, 0.12);
-      padding: 25px 30px;
-      border-radius: 15px;
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-      backdrop-filter: blur(10px);
-      color: #f0f0f0;
-    }
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 10px;
-      font-size: 16px;
-    }
-    th, td {
-      padding: 12px 18px;
-      background: rgba(0, 0,
+  </script>
+</body>
+</html>
