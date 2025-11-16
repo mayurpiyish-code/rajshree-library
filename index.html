@@ -270,11 +270,6 @@
   // Submit handler for Add or Update entry (prevents double seatNumber)
   libraryForm.addEventListener('submit', function (event) {
     event.preventDefault();
-     db.collection("students").get().then(snapshot => {
-    if (snapshot.size >= 20) {
-      alert('Maximum 20 entries allowed. No more seats available!');
-      return;
-    }
     const entry = {
       name: document.getElementById('studentName').value.trim(),
       seatNumber: parseInt(document.getElementById('seatNumber').value),
