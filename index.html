@@ -121,6 +121,18 @@
     tr:hover td {
       background-color: rgba(37, 117, 252, 0.4);
     }
+    button.edit-btn {
+      background-color: #ffa500;
+      padding: 5px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      box-shadow: none;
+      width: auto;
+      margin-top: 0;
+    }
+    button.edit-btn:hover {
+      background-color: #cc8400;
+    }
     @media (max-width: 600px) {
       form, #seatInfo, #studentList {
         width: 95% !important;
@@ -147,7 +159,6 @@
 <body>
   <h2>RAJSHREE LIBRARY PORTAL</h2>
 
-  <!-- Yahi form password ke baad dikhana hai (id change! libraryForm)  -->
   <form id="libraryForm" style="display:none;">
     <label for="studentName">Student Name:</label>
     <input type="text" id="studentName" required />
@@ -164,10 +175,9 @@
     <label for="expiryDate">Expiry Date:</label>
     <input type="date" id="expiryDate" required />
 
-    <button type="submit">Add Student</button>
+    <button type="submit" id="submitButton">Add Student</button>
   </form>
 
-  <!-- Read-only message, default visible -->
   <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
     <span style="font-size:18px; color:#ff5252;">Read-only mode: Entry not allowed</span>
   </div>
@@ -187,6 +197,7 @@
           <th>Fees Date</th>
           <th>Expiry Date</th>
           <th>Status</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="studentTableBody"></tbody>
@@ -194,88 +205,113 @@
   </div>
 
   <script>
- const totalSeats = 20;
-let bookedSeats = 0;
-const seatsBooked = new Set();
+    const totalSeats = 20;
+    let bookedSeats = 0;
+    let editIndex = null; // track ki entry edit ho rahi hai ya nahi
 
-const libraryForm = document.getElementById('libraryForm');
-const studentTableBody = document.getElementById('studentTableBody');
-const seatInfo = document.getElementById('seatInfo');
+    const libraryForm = document.getElementById('libraryForm');
+    const studentTableBody = document.getElementById('studentTableBody');
+    const seatInfo = document.getElementById('seatInfo');
+    const submitButton = document.getElementById('submitButton');
 
-// ========== Save entry in localStorage on submit ==========
-libraryForm.addEventListener('submit', function(event) {
-  event.preventDefault();
+    // Function to show all entries from localStorage
+    function showEntries() {
+      studentTableBody.innerHTML = "";
+      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+      const today = new Date().toISOString().split('T')[0];
+      studentEntries.forEach((entry, i) => {
+        const status = entry.expiryDate < today ? 'Expired' : 'Active';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${entry.name}</td>
+          <td>${entry.seatNumber}</td>
+          <td>${entry.feesPaid}</td>
+          <td>${entry.feesDate}</td>
+          <td>${entry.expiryDate}</td>
+          <td>${status}</td>
+          <td><button class="edit-btn" onclick="editEntry(${i})">Change</button></td>
+        `;
+        studentTableBody.appendChild(tr);
+      });
+      bookedSeats = studentEntries.length;
+      seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
+    }
 
-  const name = document.getElementById('studentName').value.trim();
-  const seatNumber = parseInt(document.getElementById('seatNumber').value);
-  const feesPaid = parseFloat(document.getElementById('feesPaid').value);
-  const feesDate = document.getElementById('feesDate').value;
-  const expiryDate = document.getElementById('expiryDate').value;
+    // On form submit: add new or update existing entry
+    libraryForm.addEventListener('submit', function(event) {
+      event.preventDefault();
 
-  // Double booking check
-  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
-  if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
-    alert('This seat is already booked!');
-    return;
-  }
+      const name = document.getElementById('studentName').value.trim();
+      const seatNumber = parseInt(document.getElementById('seatNumber').value);
+      const feesPaid = parseFloat(document.getElementById('feesPaid').value);
+      const feesDate = document.getElementById('feesDate').value;
+      const expiryDate = document.getElementById('expiryDate').value;
 
-  // Save to localStorage
-  studentEntries.push({
-    name, seatNumber, feesPaid, feesDate, expiryDate
-  });
-  localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
-  showEntries();
-  libraryForm.reset();
-});
+      let studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
 
-// ========== Show entries function (localStorage se) ==========
-function showEntries() {
-  studentTableBody.innerHTML = "";
-  const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
-  // Status update and table rows
-  const today = new Date().toISOString().split('T')[0];
-  studentEntries.forEach(entry => {
-    const status = entry.expiryDate < today ? 'Expired' : 'Active';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${entry.name}</td>
-      <td>${entry.seatNumber}</td>
-      <td>${entry.feesPaid}</td>
-      <td>${entry.feesDate}</td>
-      <td>${entry.expiryDate}</td>
-      <td>${status}</td>
-    `;
-    studentTableBody.appendChild(tr);
-  });
-  bookedSeats = studentEntries.length;
-  seatInfo.textContent = `Total Seats: ${totalSeats} | Booked Seats: ${bookedSeats} | Available Seats: ${totalSeats - bookedSeats}`;
-}
+      // For editing existing entry
+      if(editIndex !== null) {
+        // Check if seat number duplicate in other entries
+        if(studentEntries.some((entry, idx) => entry.seatNumber === seatNumber && idx !== editIndex)) {
+          alert('This seat is already booked!');
+          return;
+        }
+        studentEntries[editIndex] = { name, seatNumber, feesPaid, feesDate, expiryDate };
+        editIndex = null;
+        submitButton.textContent = "Add Student";
+      }
+      else {
+        // Check if seat is already booked before adding new
+        if(studentEntries.some(entry => entry.seatNumber === seatNumber)) {
+          alert('This seat is already booked!');
+          return;
+        }
+        studentEntries.push({ name, seatNumber, feesPaid, feesDate, expiryDate });
+      }
 
-// ========== Password panel logic ==========
-function askPassword() {
-  let userPass = "";
-  while (userPass !== password) {
-    userPass = prompt("Entry Panel Access ke liye password daalein:");
-    if (userPass === null) break; // agar user cancel kare
-    if (userPass === password) {
-      document.getElementById('libraryForm').style.display = 'block';
-      document.getElementById('readonlyMsg').style.display = 'none';
-      return; // sahi password par exit
-    } else {
-      alert("Galat password! Read-only mode.");
+      localStorage.setItem('studentEntries', JSON.stringify(studentEntries));
+      showEntries();
+      libraryForm.reset();
+    });
+
+    // Edit entry: load data into form for editing
+    function editEntry(index) {
+      const studentEntries = JSON.parse(localStorage.getItem('studentEntries') || '[]');
+      const entry = studentEntries[index];
+      document.getElementById('studentName').value = entry.name;
+      document.getElementById('seatNumber').value = entry.seatNumber;
+      document.getElementById('feesPaid').value = entry.feesPaid;
+      document.getElementById('feesDate').value = entry.feesDate;
+      document.getElementById('expiryDate').value = entry.expiryDate;
+      editIndex = index;
+      submitButton.textContent = "Update Entry";
+    }
+
+    // Password protection logic
+    const password = "rajshree@9799";
+    function askPassword() {
+      let userPass = "";
+      while (userPass !== password) {
+        userPass = prompt("Entry Panel Access ke liye password daalein:");
+        if (userPass === null) break;
+        if (userPass === password) {
+          document.getElementById('libraryForm').style.display = 'block';
+          document.getElementById('readonlyMsg').style.display = 'none';
+          return;
+        } else {
+          alert("Galat password! Read-only mode.");
+          document.getElementById('libraryForm').style.display = 'none';
+          document.getElementById('readonlyMsg').style.display = 'block';
+        }
+      }
+    }
+
+    window.onload = function() {
       document.getElementById('libraryForm').style.display = 'none';
       document.getElementById('readonlyMsg').style.display = 'block';
-    }
-  }
-}
-
-// ========== On page load ==========
-window.onload = function() {
-  document.getElementById('libraryForm').style.display = 'none';
-  document.getElementById('readonlyMsg').style.display = 'block';
-  askPassword();
-  showEntries();
-};
+      askPassword();
+      showEntries();
+    };
   </script>
 </body>
 </html>
