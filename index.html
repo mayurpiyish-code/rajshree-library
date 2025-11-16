@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
  <style>
+   
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
@@ -25,6 +27,11 @@
       margin-bottom: 25px;
       text-shadow: 2px 2px 5px rgba(0,0,0,0.3);
     }
+   .expired-row {
+  outline: 2.5px solid red;
+  background: rgba(255,36,36,0.10);
+}
+
     form {
       background: rgba(255, 255, 255, 0.12);
       padding: 25px 30px;
@@ -340,6 +347,24 @@
       askPassword();
       showEntries();
     }
+    const status = entry.expiryDate < today ? 'Expired' : 'Active';
+const tr = document.createElement('tr');
+if (status === 'Expired') {
+  tr.classList.add('expired-row');
+}
+tr.innerHTML = `
+  <td>${entry.name}</td>
+  <td>${entry.seatNumber}</td>
+  <td>${entry.feesPaid}</td>
+  <td>${entry.feesDate}</td>
+  <td>${entry.expiryDate}</td>
+  <td>${status}</td>
+  <td>
+    <button class="edit-btn" onclick="editEntry('${doc.id}')">Change</button>
+  </td>
+`;
+studentTableBody.appendChild(tr);
+
   </script>
 </body>
 </html>
