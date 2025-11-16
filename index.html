@@ -194,6 +194,14 @@ tr:hover td {
   <div id="seatInfo">
     Total Seats: 20 | Booked Seats: 0 | Available Seats: 20
   </div>
+  <form id="Password" style="display:none;">
+  <!-- form fields yahan... (as already in your code) -->
+</form>
+  <div id="readonlyMsg" style="display:block; text-align:center; margin:20px 0;">
+  <span style="font-size:18px; color:#ff5252;">Read-only mode: Entry not allowed</span>
+</div>
+<!-- Table of students below this, always visible -->
+
 
   <div id="studentList">
     <h3>Booked Seats & Students</h3>
@@ -260,6 +268,24 @@ tr:hover td {
       // Reset form
       studentForm.reset();
     });
+     const password = "rajshree@9799"; // apna password rakh lein yahan
+
+  function askPassword() {
+    let userPass = prompt("Entry Panel Access ke liye password daalein:");
+    if (userPass === password) {
+      document.getElementById('Password').style.display = 'block';
+      document.getElementById('readonlyMsg').style.display = 'none';
+    } else {
+      document.getElementById('Password').style.display = 'none';
+      document.getElementById('readonlyMsg').style.display = 'block';
+      // Optional: error message or try again
+    }
+  }
+
+  window.onload = function() {
+    document.getElementById('Password').style.display = 'none';
+    document.getElementById('readonlyMsg').style.display = 'block';
+    askPassword();
   </script>
 </body>
 </html>
