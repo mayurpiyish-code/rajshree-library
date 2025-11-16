@@ -265,39 +265,37 @@
 
     // Form submit handler (add or update entry)
     libraryForm.addEventListener('submit', function (event) {
-      event.preventDefault();
-      const entry = {
-        name: document.getElementById('studentName').value.trim(),
-        seatNumber: parseInt(document.getElementById('seatNumber').value),
-        feesPaid: parseFloat(document.getElementById('feesPaid').value),
-        feesDate: document.getElementById('feesDate').value,
-        expiryDate: document.getElementById('expiryDate').value
-      };
+  event.preventDefault();
+  const entry = {
+    name: document.getElementById('studentName').value.trim(),
+    seatNumber: parseInt(document.getElementById('seatNumber').value),
+    feesPaid: parseFloat(document.getElementById('feesPaid').value),
+    feesDate: document.getElementById('feesDate').value,
+    expiryDate: document.getElementById('expiryDate').value
+  };
 
-      db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
-        if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
-          alert('This seat is already booked!');
-          return;
-        }
-        if (editDocId) {
-          // UPDATE ENTRY
-          db.collection("students").doc(editDocId).set(entry)
-            .then(() => {
-              editDocId = null;
-              submitButton.textContent = "Add Student";
-              libraryForm.reset();
-              showEntries();
-            });
-        } else {
-          // ADD ENTRY ONLY ONCE
-          db.collection("students").add(entry)
-            .then(() => {
-              libraryForm.reset();
-              showEntries();
-            });
-        }
-      });
-    });
+  db.collection("students").where("seatNumber", "==", entry.seatNumber).get().then(qs => {
+    if ((editDocId == null && !qs.empty) || (editDocId && !qs.empty && qs.docs[0].id !== editDocId)) {
+      alert('This seat is already booked!');
+      return;
+    }
+    if (editDocId) {
+      db.collection("students").doc(editDocId).set(entry)
+        .then(() => {
+          editDocId = null;
+          submitButton.textContent = "Add Student";
+          libraryForm.reset();
+          showEntries();
+        });
+    } else {
+      db.collection("students").add(entry)
+        .then(() => {
+          libraryForm.reset();
+          showEntries();
+        });
+    }
+  });
+});
 
     // Edit entry logic
     window.editEntry = function(docId) {
