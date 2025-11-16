@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore-compat.js"></script>
   <title>RAJSHREE LIBRARY PORTAL</title>
   <style>
     body {
@@ -320,6 +322,30 @@
       askPassword();
       showEntries();
     };
+    const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  // अन्य config params
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+db.collection("students").add({
+  name: "Student Name",
+  seatNumber: 1,
+  feesPaid: 500,
+  feesDate: "2025-11-16",
+  expiryDate: "2026-11-16"
+})
+.then(() => console.log("Data added"))
+.catch(error => console.error("Error adding data: ", error));
+db.collection("students").get().then(querySnapshot => {
+  querySnapshot.forEach(doc => {
+    console.log(doc.id, doc.data());
+  });
+});
+
   </script>
 </body>
 </html>
